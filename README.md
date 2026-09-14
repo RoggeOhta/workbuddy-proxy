@@ -1,7 +1,5 @@
 # WorkBuddy Free Proxy
 
-[![CI](https://github.com/RoggeOhta/workbuddy-free-proxy/actions/workflows/ci.yml/badge.svg)](https://github.com/RoggeOhta/workbuddy-free-proxy/actions/workflows/ci.yml)
-
 用 **Bun + TypeScript** 将 WorkBuddy AI 账号当前免费的模型接到 OpenAI Chat Completions 客户端。支持 Docker、本地 HTTPS 域名、SSE 流式透传和非流式聚合。
 
 这是非官方适配项目，面向自己账号的本地使用。运行时无第三方 JavaScript 依赖，无 Python 或 curl 子进程。
