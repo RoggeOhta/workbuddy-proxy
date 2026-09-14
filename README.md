@@ -15,6 +15,7 @@
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&amp;logo=typescript&amp;logoColor=white" alt="TypeScript 5.9" /></a>
   <a href="compose.yaml"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&amp;logo=docker&amp;logoColor=white" alt="Docker Compose" /></a>
   <a href="#api-示例"><img src="https://img.shields.io/badge/API-Chat_Completions-277A57?style=flat-square" alt="Chat Completions API" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-277A57?style=flat-square" alt="MIT License" /></a>
   <a href="package.json"><img src="https://img.shields.io/badge/Runtime_dependencies-0-59636E?style=flat-square" alt="Zero third-party runtime dependencies" /></a>
 </p>
 
@@ -293,4 +294,6 @@ tests/           离线测试
 - [Bun](https://github.com/oven-sh/bun)：HTTP 服务、fetch、TypeScript 执行和测试运行时。
 - [Portless](https://github.com/vercel-labs/portless)：可选的独立本地 HTTPS 代理。
 
-本仓库为私有项目，暂未授予开源许可证。第三方软件分别遵循其各自许可证。
+## 许可证
+
+本项目采用 [MIT License](LICENSE)。第三方软件分别遵循其各自许可证。
