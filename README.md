@@ -1,8 +1,34 @@
-# WorkBuddy Free Proxy
+<p align="center">
+  <img src="assets/icon.svg" width="104" height="104" alt="WorkBuddy Proxy icon" />
+</p>
 
-用 **Bun + TypeScript** 将 WorkBuddy AI 账号当前免费的模型接到 OpenAI Chat Completions 客户端。支持 Docker、本地 HTTPS 域名、SSE 流式透传和非流式聚合。
+<h1 align="center">WorkBuddy Proxy</h1>
 
-这是非官方适配项目，面向自己账号的本地使用。运行时无第三方 JavaScript 依赖，无 Python 或 curl 子进程。
+<p align="center">
+  将 WorkBuddy AI 的免费模型，接到你习惯的客户端。
+  <br />
+  Bun + TypeScript · Docker · 本地 HTTPS · 流式输出
+</p>
+
+<p align="center">
+  <a href="https://bun.sh"><img src="https://img.shields.io/badge/Bun-1.3.11-18181B?style=flat-square&amp;logo=bun&amp;logoColor=white" alt="Bun 1.3.11" /></a>
+  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&amp;logo=typescript&amp;logoColor=white" alt="TypeScript 5.9" /></a>
+  <a href="compose.yaml"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&amp;logo=docker&amp;logoColor=white" alt="Docker Compose" /></a>
+  <a href="#api-示例"><img src="https://img.shields.io/badge/API-Chat_Completions-277A57?style=flat-square" alt="Chat Completions API" /></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/Runtime_dependencies-0-59636E?style=flat-square" alt="Zero third-party runtime dependencies" /></a>
+</p>
+
+<p align="center">
+  <a href="#快速开始">快速开始</a> ·
+  <a href="#配置">配置</a> ·
+  <a href="#portless-本地-https">Portless</a> ·
+  <a href="#故障排查">故障排查</a> ·
+  <a href="CONTRIBUTING.md">参与开发</a>
+</p>
+
+---
+
+面向自己账号的非官方本地适配项目。动态发现当前免费模型，通过 OpenAI Chat Completions 接口提供给第三方客户端，支持 SSE 流式透传与非流式聚合。运行时无第三方 JavaScript 依赖。
 
 ## 功能
 
@@ -15,12 +41,12 @@
 
 ## 工作方式
 
-```text
-OpenAI-compatible client
-  → Portless (optional local HTTPS)
-  → Bun proxy :18080
-      ├─ GET /v3/config → current free-model policy
-      └─ POST /v2/chat/completions → WorkBuddy AI
+```mermaid
+flowchart LR
+    Client[OpenAI-compatible client] --> HTTPS[Portless · optional HTTPS]
+    HTTPS --> Proxy[Bun proxy]
+    Proxy --> Config[Free-model configuration]
+    Proxy --> Model[WorkBuddy AI inference]
 ```
 
 默认宿主机映射端口为 `127.0.0.1:18081`。上游固定为 `https://www.workbuddy.ai`，当前适配海外版 WorkBuddy AI 的登录文件。
@@ -40,8 +66,8 @@ OpenAI-compatible client
 ### 2. 启动 Docker
 
 ```bash
-git clone https://github.com/RoggeOhta/workbuddy-free-proxy.git
-cd workbuddy-free-proxy
+git clone https://github.com/RoggeOhta/workbuddy-proxy.git
+cd workbuddy-proxy
 cp .env.example .env
 docker compose up -d --build
 ```
@@ -186,7 +212,7 @@ docker compose down           # 停止，保留密钥卷
 bun install --frozen-lockfile
 bun run typecheck
 bun test
-docker build -t workbuddy-free-proxy:local .
+docker build -t workbuddy-proxy:local .
 ```
 
 测试覆盖免费模型筛选、活动时间边界、收费模型拒绝、长 UTF-8 请求、工具字段透传、SSE 分片与非流式聚合。真实上游连通性需要在已登录环境单独验证。

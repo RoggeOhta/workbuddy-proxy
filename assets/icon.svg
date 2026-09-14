@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">WorkBuddy Proxy</title>
+  <desc id="description">A mint W-shaped route connecting two endpoints on a dark rounded square.</desc>
+  <rect x="4" y="4" width="120" height="120" rx="30" fill="#112923"/>
+  <rect x="4.5" y="4.5" width="119" height="119" rx="29.5" stroke="#25473B"/>
+  <path d="M30 44L46 86L64 52L82 86L98 44" stroke="#8CE6B1" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="30" cy="44" r="8" fill="#F1F8F3"/>
+  <circle cx="98" cy="44" r="8" fill="#F1F8F3"/>
+</svg>

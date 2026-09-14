@@ -16,7 +16,7 @@ const server = Bun.serve({
   maxRequestBodySize: 16 * 1024 * 1024, idleTimeout: 240,
   fetch: createHandler(key, new Upstream(authFile)),
 });
-console.log(`WorkBuddy Free Proxy listening on ${server.url}`);
+console.log(`WorkBuddy Proxy listening on ${server.url}`);
 console.log(`Proxy API key file: ${keyFile}`);
 process.on('SIGTERM', () => { server.stop(true); process.exit(0); });
 process.on('SIGINT', () => { server.stop(true); process.exit(0); });
