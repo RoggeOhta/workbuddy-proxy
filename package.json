@@ -1,0 +1,10 @@
+{
+  "name": "workbuddy-free-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local OpenAI-compatible gateway for currently free WorkBuddy AI models",
+  "scripts": {"start": "bun src/index.ts", "dev": "bun --watch src/index.ts", "test": "bun test", "typecheck": "tsc --noEmit"},
+  "engines": {"bun": ">=1.3.11"},
+  "devDependencies": {"@types/bun": "1.3.11", "typescript": "^5.9.3"}
+}

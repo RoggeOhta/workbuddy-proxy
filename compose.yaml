@@ -1,0 +1,26 @@
+name: workbuddy-proxy
+services:
+  proxy:
+    build: .
+    ports:
+      - "127.0.0.1:${PROXY_PORT:-18081}:18080"
+    volumes:
+      - type: bind
+        source: ${WORKBUDDY_AUTH_DIR:-${HOME}/Library/Application Support/CodeBuddyExtension/Data/Public/auth}
+        target: /auth
+        read_only: true
+        bind:
+          create_host_path: false
+      - proxy-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:18080/health'); if(!r.ok)process.exit(1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+volumes:
+  proxy-data:

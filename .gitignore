@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.api-key
+*.info
+*.pem
+*.key
+*.log
+.DS_Store
+coverage/
+data/
+auth/
