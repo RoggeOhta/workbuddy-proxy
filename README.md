@@ -30,6 +30,116 @@
 
 面向自己账号的非官方本地适配项目。动态发现当前免费模型，通过 OpenAI Chat Completions 接口提供给第三方客户端，支持 SSE 流式透传与非流式聚合。运行时无第三方 JavaScript 依赖。
 
+## 快速开始
+
+### 方式一：让 AI 帮你安装
+
+把下面这段提示词复制给能操作终端的 AI 编程助手：
+
+```text
+请帮我安装并运行 WorkBuddy Proxy：
+https://github.com/RoggeOhta/workbuddy-proxy
+
+先阅读仓库 README 和部署配置，再根据我的系统完成安装：
+
+1. 检查系统、Git、Docker 和 Docker Compose。优先使用 Docker；
+   如果没有 Docker，可使用 Bun 1.3.11 或以上运行。
+2. 克隆仓库，找到我自己的 WorkBuddy AI 登录文件
+   workbuddy-desktop-ai.info，并配置认证文件路径。
+   如果仓库没有访问权限或登录文件不存在，明确告诉我缺少什么，
+   引导我完成必要的登录，不要假定已经配置好。
+3. 默认只监听本机。检查端口占用，保留已有服务与代理密钥，
+   不把登录凭证、API Key 或个人路径提交到 Git。
+4. 启动服务，用实际请求验证 /health、带认证的 /v1/models，
+   再从返回的免费模型中选择一个，发送最小聊天请求。
+   同时验证非流式响应和流式响应的 [DONE]，不要只检查容器状态。
+5. 最后给我可直接填写的 Base URL、API 协议、可用模型 ID、
+   获取或复制代理密钥的命令，以及启动、停止和更新方法。
+   如有失败或未验证的项目，请明确说明。
+
+先完成基本安装；Portless 本地 HTTPS 是可选项，不作为启动前提。
+```
+
+仓库为私有时，需要先让 Git 或 GitHub CLI 登录具备访问权限的账号。安装助手不会替代 WorkBuddy AI 的账号登录。
+
+### 方式二：手动安装
+
+需要 **Git、Docker 和 Docker Compose**，以及自己的 **WorkBuddy AI 登录文件**。Docker Desktop 请使用 Linux 容器模式。
+
+#### 1. 准备登录文件
+
+先安装并登录 WorkBuddy AI。macOS 默认文件位置：
+
+```text
+~/Library/Application Support/CodeBuddyExtension/Data/Public/auth/workbuddy-desktop-ai.info
+```
+
+Windows、Linux 或远程主机需准备包含 `workbuddy-desktop-ai.info` 的目录，并将实际目录填入 `WORKBUDDY_AUTH_DIR`。不要把登录文件放进仓库。登录过期后需更新部署使用的文件。
+
+#### 2. 克隆并配置
+
+macOS / Linux：
+
+```bash
+git clone https://github.com/RoggeOhta/workbuddy-proxy.git
+cd workbuddy-proxy
+cp .env.example .env
+```
+
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/RoggeOhta/workbuddy-proxy.git
+Set-Location workbuddy-proxy
+Copy-Item .env.example .env
+```
+
+macOS 使用默认认证目录时无需修改 `.env`。其他系统或自定义目录，请编辑 `.env`，将示例路径替换为自己的真实路径：
+
+```dotenv
+PROXY_PORT=18081
+WORKBUDDY_AUTH_DIR=/absolute/path/to/auth-directory
+```
+
+Windows 路径使用正斜杠，例如 `C:/path/to/auth-directory`。该目录中必须直接包含 `workbuddy-desktop-ai.info`；填写目录而非文件路径。
+
+#### 3. 启动服务并获取密钥
+
+以下命令在上述终端中均可执行：
+
+```sh
+docker compose up -d --build
+docker compose ps
+docker compose exec -T proxy cat /data/.api-key
+```
+
+代理密钥自动生成并持久化，与 WorkBuddy 登录令牌不同。不要使用登录令牌填写客户端的 API Key。
+
+复制代理密钥到剪贴板：
+
+```bash
+# macOS
+docker compose exec -T proxy cat /data/.api-key | pbcopy
+```
+
+```powershell
+# Windows PowerShell
+docker compose exec -T proxy cat /data/.api-key | Set-Clipboard
+```
+
+#### 4. 接入客户端
+
+| 字段 | 值 |
+| --- | --- |
+| API 协议 | OpenAI Chat Completions / `openai-completions` |
+| Base URL | `http://127.0.0.1:18081/v1` |
+| API Key | 上一步读取的代理密钥，不加 `Bearer` 前缀 |
+| 模型目录 | 点击“获取可用模型”，选择返回的完整模型 ID |
+
+发送一条简短消息确认实际调用成功；命令行验证见 [API 示例](#api-示例)。模型目录随账号配置和免费活动变化，不维护固定清单。
+
+没有 Docker？见 [本机 Bun 进程](#本机-bun-进程)。需要固定 HTTPS 域名？见 [Portless](#portless-本地-https)。
+
 ## 功能
 
 - **动态模型目录**：每次查询和调用前读取上游配置，仅放行明确为零费率或处于有效免费活动中的模型。
@@ -50,56 +160,6 @@ flowchart LR
 ```
 
 默认宿主机映射端口为 `127.0.0.1:18081`。上游固定为 `https://www.workbuddy.ai`，当前适配海外版 WorkBuddy AI 的登录文件。
-
-## 快速开始
-
-### 1. 准备登录状态
-
-先安装并登录 WorkBuddy AI。macOS 默认认证文件位置：
-
-```text
-~/Library/Application Support/CodeBuddyExtension/Data/Public/auth/workbuddy-desktop-ai.info
-```
-
-项目不会发起登录、提取其他应用账号或自动刷新令牌。每次上游请求在内存中读取此文件；登录过期后，在 WorkBuddy AI 重新登录即可。
-
-### 2. 启动 Docker
-
-```bash
-git clone https://github.com/RoggeOhta/workbuddy-proxy.git
-cd workbuddy-proxy
-cp .env.example .env
-docker compose up -d --build
-```
-
-macOS 默认路径可直接使用。Linux / 远程主机需在 `.env` 的 `WORKBUDDY_AUTH_DIR` 中指定已准备好的认证目录，该目录必须包含 `workbuddy-desktop-ai.info`。
-
-Compose 项目名默认为 `workbuddy-proxy`。同一主机部署多个实例时，请分别设置项目名和宿主机端口，确保数据卷和端口独立。
-
-### 3. 获取代理密钥
-
-```bash
-docker compose exec -T proxy cat /data/.api-key
-```
-
-macOS 可直接复制到剪贴板：
-
-```bash
-docker compose exec -T proxy cat /data/.api-key | pbcopy
-```
-
-这是本地代理的访问密钥，与 WorkBuddy 登录令牌不同。本机直接运行与 Docker 各自生成密钥，不可混用。
-
-### 4. 配置客户端
-
-| 字段 | 值 |
-| --- | --- |
-| API 协议 | OpenAI Chat Completions / `openai-completions` |
-| Base URL | `http://127.0.0.1:18081/v1` |
-| API Key | 上一步读取的代理密钥，不加 `Bearer` 前缀 |
-| 模型目录 | 点击“获取可用模型”，以实时返回为准 |
-
-模型目录由上游账号配置和免费活动决定，不维护固定模型清单。客户端应使用 `/v1/models` 返回的完整 ID；同名模型的不同线路可能具有不同费率。免费活动结束后应刷新模型目录。
 
 ## Portless 本地 HTTPS
 
@@ -182,7 +242,7 @@ docker compose up -d --build   # 更新代码后重建
 docker compose down           # 停止，保留密钥卷
 ```
 
-`docker compose down -v` 会删除数据卷并导致下次启动生成新密钥。Compose 使用 `restart: unless-stopped`；宿主机 Docker 与 Portless 是否开机启动由各自配置决定。
+`docker compose down -v` 会删除数据卷并导致下次启动生成新密钥。Compose 使用 `restart: unless-stopped`；宿主机 Docker 与 Portless 是否开机启动由各自配置决定。项目名默认为 `workbuddy-proxy`；同一主机部署多个实例时需使用不同的 Compose 项目名和宿主机端口。
 
 ## 故障排查
 
