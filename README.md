@@ -29,94 +29,69 @@
 
 ---
 
-面向自己账号的非官方本地适配项目。动态发现当前免费模型，通过 OpenAI Chat Completions 接口提供给第三方客户端，支持 SSE 流式透传与非流式聚合。运行时无第三方 JavaScript 依赖。
+非官方的 WorkBuddy AI 本地代理：动态发现免费模型，通过 OpenAI Chat Completions 接口提供流式和非流式调用。基于 Bun + TypeScript，运行时无第三方 JavaScript 依赖。
 
 ## 快速开始
 
-### 方式一：让 AI 帮你安装
+### 让 AI 安装
 
-把下面这段提示词复制给能操作终端的 AI 编程助手：
+复制给能操作终端的 AI 助手：
 
 ```text
-请帮我安装并运行 WorkBuddy Proxy：
-https://github.com/RoggeOhta/workbuddy-proxy
-
-先阅读仓库 README 和部署配置，再根据我的系统完成安装：
-
-1. 检查系统、Git、Docker 和 Docker Compose。优先使用 Docker；
-   如果没有 Docker，可使用 Bun 1.3.11 或以上运行。
-2. 克隆仓库，找到我自己的 WorkBuddy AI 登录文件
-   workbuddy-desktop-ai.info，并配置认证文件路径。
-   如果仓库没有访问权限或登录文件不存在，明确告诉我缺少什么，
-   引导我完成必要的登录，不要假定已经配置好。
-3. 默认只监听本机。检查端口占用，保留已有服务与代理密钥，
-   不把登录凭证、API Key 或个人路径提交到 Git。
-4. 启动服务，用实际请求验证 /health、带认证的 /v1/models，
-   再从返回的免费模型中选择一个，发送最小聊天请求。
-   同时验证非流式响应和流式响应的 [DONE]，不要只检查容器状态。
-5. 最后给我可直接填写的 Base URL、API 协议、可用模型 ID、
-   获取或复制代理密钥的命令，以及启动、停止和更新方法。
-   如有失败或未验证的项目，请明确说明。
-
-先完成基本安装；Portless 本地 HTTPS 是可选项，不作为启动前提。
+帮我安装并运行 https://github.com/RoggeOhta/workbuddy-proxy，
+根据我的系统完成配置，实际调用模型验证可用，最后给我客户端连接信息。
 ```
 
-仓库为私有时，需要先让 Git 或 GitHub CLI 登录具备访问权限的账号。安装助手不会替代 WorkBuddy AI 的账号登录。
+### 手动安装
 
-### 方式二：手动安装
+准备好 **Git、Docker Compose** 和自己的 **WorkBuddy AI 登录文件**。Docker Desktop 使用 Linux 容器模式；私有仓库需要 GitHub 访问权限。
 
-需要 **Git、Docker 和 Docker Compose**，以及自己的 **WorkBuddy AI 登录文件**。Docker Desktop 请使用 Linux 容器模式。
+**1. 下载项目**
 
-#### 1. 准备登录文件
+```sh
+git clone https://github.com/RoggeOhta/workbuddy-proxy.git
+cd workbuddy-proxy
+```
 
-先安装并登录 WorkBuddy AI。macOS 默认文件位置：
+将 `.env.example` 复制为 `.env`：macOS / Linux 使用 `cp .env.example .env`，PowerShell 使用 `Copy-Item .env.example .env`。
+
+**2. 配置登录目录**
+
+macOS 默认读取以下文件，已登录 WorkBuddy AI 时通常无需修改配置：
 
 ```text
 ~/Library/Application Support/CodeBuddyExtension/Data/Public/auth/workbuddy-desktop-ai.info
 ```
 
-Windows、Linux 或远程主机需准备包含 `workbuddy-desktop-ai.info` 的目录，并将实际目录填入 `WORKBUDDY_AUTH_DIR`。不要把登录文件放进仓库。登录过期后需更新部署使用的文件。
-
-#### 2. 克隆并配置
-
-macOS / Linux：
-
-```bash
-git clone https://github.com/RoggeOhta/workbuddy-proxy.git
-cd workbuddy-proxy
-cp .env.example .env
-```
-
-Windows PowerShell：
-
-```powershell
-git clone https://github.com/RoggeOhta/workbuddy-proxy.git
-Set-Location workbuddy-proxy
-Copy-Item .env.example .env
-```
-
-macOS 使用默认认证目录时无需修改 `.env`。其他系统或自定义目录，请编辑 `.env`，将示例路径替换为自己的真实路径：
+其他系统或自定义路径，在 `.env` 中填写认证文件所在的**目录**：
 
 ```dotenv
 PROXY_PORT=18081
 WORKBUDDY_AUTH_DIR=/absolute/path/to/auth-directory
 ```
 
-Windows 路径使用正斜杠，例如 `C:/path/to/auth-directory`。该目录中必须直接包含 `workbuddy-desktop-ai.info`；填写目录而非文件路径。
+Windows 路径可写为 `C:/path/to/auth-directory`。目录中必须包含 `workbuddy-desktop-ai.info`；登录文件不要放进仓库。
 
-#### 3. 启动服务并获取密钥
-
-以下命令在上述终端中均可执行：
+**3. 启动并获取代理密钥**
 
 ```sh
 docker compose up -d --build
-docker compose ps
 docker compose exec -T proxy cat /data/.api-key
 ```
 
-代理密钥自动生成并持久化，与 WorkBuddy 登录令牌不同。不要使用登录令牌填写客户端的 API Key。
+**4. 接入客户端**
 
-复制代理密钥到剪贴板：
+| 字段 | 填写内容 |
+| --- | --- |
+| 协议 | OpenAI Chat Completions / `openai-completions` |
+| Base URL | `http://127.0.0.1:18081/v1` |
+| API Key | 上一步输出的代理密钥，不加 `Bearer` |
+| 模型 | 点击“获取可用模型”，选择返回的模型 ID |
+
+发送一条消息验证调用即可。模型列表随账号和免费活动变化，以实时返回为准。
+
+<details>
+<summary>复制密钥到剪贴板</summary>
 
 ```bash
 # macOS
@@ -128,61 +103,31 @@ docker compose exec -T proxy cat /data/.api-key | pbcopy
 docker compose exec -T proxy cat /data/.api-key | Set-Clipboard
 ```
 
-#### 4. 接入客户端
+代理密钥与 WorkBuddy 登录令牌不同；Docker 和直接运行 Bun 的实例也各有自己的密钥。
 
-| 字段 | 值 |
-| --- | --- |
-| API 协议 | OpenAI Chat Completions / `openai-completions` |
-| Base URL | `http://127.0.0.1:18081/v1` |
-| API Key | 上一步读取的代理密钥，不加 `Bearer` 前缀 |
-| 模型目录 | 点击“获取可用模型”，选择返回的完整模型 ID |
+</details>
 
-发送一条简短消息确认实际调用成功；命令行验证见 [API 示例](#api-示例)。模型目录随账号配置和免费活动变化，不维护固定清单。
-
-没有 Docker？见 [本机 Bun 进程](#本机-bun-进程)。需要固定 HTTPS 域名？见 [Portless](#portless-本地-https)。
+没有 Docker？见 [直接运行 Bun](#直接运行-bun)。需要固定域名？见 [Portless](#portless-本地-https)。
 
 ## 功能
 
-- **动态模型目录**：每次查询和调用前读取上游配置，仅放行明确为零费率或处于有效免费活动中的模型。
-- **原生 HTTP**：`Bun.serve` + `fetch` 直接传递 JSON 请求体，支持较大的上下文和工具定义。
-- **流式响应**：逐块转发上游 SSE，保留推理内容和工具调用字段。
-- **非流式响应**：聚合文本、推理、工具参数和 usage；检测流中断。
-- **Docker**：只读挂载登录目录，独立数据卷保存代理密钥；重建容器不更换密钥。
-- **Portless**：可使用 `https://workbuddy.localhost/v1` 作为固定入口。
-
-## 工作方式
+- **免费模型筛选**：查询和调用前检查上游费率与活动有效期。
+- **流式透传**：保留文本、推理内容与工具调用字段。
+- **非流式聚合**：合并响应及用量，检测不完整的 SSE 输出。
+- **凭证隔离**：登录目录只读挂载，代理密钥通过数据卷持久化。
 
 ```mermaid
 flowchart LR
-    Client[OpenAI-compatible client] --> HTTPS[Portless · optional HTTPS]
-    HTTPS --> Proxy[Bun proxy]
-    Proxy --> Config[Free-model configuration]
-    Proxy --> Model[WorkBuddy AI inference]
+    Client[客户端] --> Proxy[Bun 代理]
+    Proxy --> Config[免费模型配置]
+    Proxy --> Model[WorkBuddy AI]
 ```
 
-默认宿主机映射端口为 `127.0.0.1:18081`。上游固定为 `https://www.workbuddy.ai`，当前适配海外版 WorkBuddy AI 的登录文件。
-
-## Portless 本地 HTTPS
-
-宿主机安装并启动 [Portless](https://github.com/vercel-labs/portless)：
-
-```bash
-npm install -g portless
-portless alias workbuddy 18081
-portless proxy start
-```
-
-然后将客户端 Base URL 改为：
-
-```text
-https://workbuddy.localhost/v1
-```
-
-沿用 Docker 代理密钥。Portless 负责本地证书和 HTTPS，容器继续使用 HTTP。默认只供本机使用。更改 `PROXY_PORT` 后需同步更新 alias。
+上游为 `https://www.workbuddy.ai`，适配海外版 WorkBuddy AI。模型能力和计费规则由上游决定。
 
 ## API 示例
 
-将密钥读入当前 shell，不直接写进命令历史：
+以下示例使用 Bash。先获取模型目录，再将 `MODEL` 设为返回的免费模型 ID：
 
 ```bash
 export API_KEY="$(docker compose exec -T proxy cat /data/.api-key)"
@@ -190,110 +135,113 @@ export BASE_URL=http://127.0.0.1:18081/v1
 
 curl "$BASE_URL/models" -H "Authorization: Bearer $API_KEY"
 
+export MODEL="从上一步选择的模型ID"
 curl -N "$BASE_URL/chat/completions" \
   -H "Authorization: Bearer $API_KEY" \
   -H 'Content-Type: application/json' \
-  -d '{
-    "model": "deepseek-v4.1-flash",
-    "messages": [{"role": "user", "content": "Reply with exactly: OK"}],
-    "stream": true,
-    "max_tokens": 512
-  }'
+  -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"Reply with exactly: OK\"}],\"stream\":true,\"max_tokens\":512}"
 ```
 
-省略 `stream` 或设为 `false` 将返回聚合后的 JSON。缺少开头的 `system` 消息时，代理添加通用 system 提示词以满足上游协议；明确传入的 system 消息保持原样。温度、top_p 和推理强度仅在未传入时使用所选模型配置的默认值。
+省略 `stream` 或设为 `false` 返回 JSON；流式调用以 `[DONE]` 结束。
 
-| 方法 | 路径 | 行为 |
+| 方法 | 路径 | 用途 |
 | --- | --- | --- |
-| GET | `/health` | 无认证的本地进程健康检查，不验证上游登录 |
-| GET | `/v1/models` | 返回账号当前免费模型，需要代理密钥 |
-| POST | `/v1/chat/completions` | 支持流式与非流式，需要代理密钥 |
+| GET | `/health` | 本地健康检查，无需密钥，不验证上游登录 |
+| GET | `/v1/models` | 查询当前免费模型 |
+| POST | `/v1/chat/completions` | 聊天补全 |
+
+后两个接口需要 `Authorization: Bearer <API_KEY>`。
+
+## Portless 本地 HTTPS
+
+可选：通过 [Portless](https://github.com/vercel-labs/portless) 使用固定本地域名。
+
+```sh
+npm install -g portless
+portless alias workbuddy 18081
+portless proxy start
+```
+
+客户端地址改为 `https://workbuddy.localhost/v1`，密钥不变。更改宿主机端口后，需同步更新 alias。
 
 ## 配置
 
-### Docker Compose（`.env`）
+### Docker Compose
+
+编辑 `.env`：
 
 | 变量 | 默认值 | 用途 |
 | --- | --- | --- |
-| `PROXY_PORT` | `18081` | 宿主机映射端口 |
-| `WORKBUDDY_AUTH_DIR` | macOS WorkBuddy AI auth 目录 | 只读挂载的认证目录 |
+| `PROXY_PORT` | `18081` | 宿主机端口，仅绑定回环地址 |
+| `WORKBUDDY_AUTH_DIR` | macOS 默认认证目录 | 包含登录文件的目录 |
 
-### 本机 Bun 进程
+### 直接运行 Bun
+
+安装 Bun 1.3.11 或以上，在项目目录执行：
+
+```sh
+bun install --frozen-lockfile
+bun start
+```
+
+默认地址为 `http://127.0.0.1:18080/v1`，代理密钥保存在 `.api-key`。可通过环境变量调整：
 
 | 变量 | 默认值 |
 | --- | --- |
 | `LISTEN_HOST` | `127.0.0.1` |
 | `PORT` | `18080` |
-| `WORKBUDDY_AUTH_FILE` | macOS WorkBuddy AI 认证文件 |
+| `WORKBUDDY_AUTH_FILE` | macOS 默认认证文件路径 |
 | `API_KEY_FILE` | 工作目录的 `.api-key` |
 
-```bash
-bun install --frozen-lockfile
-bun start
+Windows / Linux 需显式设置 `WORKBUDDY_AUTH_FILE`。需要自定义可信 CA 时，可配置 `NODE_EXTRA_CA_CERTS`。
+
+## 管理服务
+
+```sh
+docker compose ps                  # 查看状态
+docker compose logs --tail=50      # 查看日志
+git pull
+docker compose up -d --build       # 更新并重建
+docker compose down               # 停止，保留密钥
 ```
 
-本机模式 Base URL 为 `http://127.0.0.1:18080/v1`，密钥在本机 `.api-key` 文件中。需要额外可信 CA 的网络可通过 `NODE_EXTRA_CA_CERTS` 提供 PEM 证书；容器需挂载该证书并配置变量，不要关闭 TLS 校验。
-
-## 运维
-
-```bash
-docker compose ps
-docker compose logs --tail=50
-docker compose up -d --build   # 更新代码后重建
-docker compose down           # 停止，保留密钥卷
-```
-
-`docker compose down -v` 会删除数据卷并导致下次启动生成新密钥。Compose 使用 `restart: unless-stopped`；宿主机 Docker 与 Portless 是否开机启动由各自配置决定。项目名默认为 `workbuddy-proxy`；同一主机部署多个实例时需使用不同的 Compose 项目名和宿主机端口。
+密钥保存在数据卷中；`down -v` 会删除它。容器配置了 `unless-stopped` 重启策略。多实例部署需使用不同的 Compose 项目名和宿主机端口。
 
 ## 故障排查
 
-| 现象 | 检查项 |
+| 现象 | 处理方式 |
 | --- | --- |
-| `401 Invalid proxy API key` | 使用 Docker 当前 `/data/.api-key`，检查空格及本机/Docker 密钥是否混用 |
-| 模型未出现在列表或返回 400 | 刷新目录，确认活动未过期；HY4 免费线路为 `hy4-preview-f` |
-| 502 | 检查 WorkBuddy 登录、容器网络、证书与上游状态；配置查询失败时不会放行模型 |
-| 域名无法访问 | 确认容器健康，执行 `portless get workbuddy` 和 `portless proxy start` |
-| 长上下文失败 | 请求体上限 16 MiB，上游响应总超时 180 秒；同时受模型上下文限制 |
+| 401 | 重新读取该实例的代理密钥，检查是否混用了登录令牌或其他实例的密钥 |
+| 模型缺失 / 400 | 刷新模型目录，检查完整 ID 和免费活动有效期 |
+| 502 | 检查 WorkBuddy 登录状态、网络和证书；登录过期后更新认证文件 |
+| 域名不可用 | 检查容器状态，执行 `portless get workbuddy` 和 `portless proxy start` |
+| 长请求失败 | 检查模型上下文限制；代理请求体上限 16 MiB，上游请求超时 180 秒 |
 
-默认日志不记录请求正文、响应正文或登录凭证。上游失败返回通用错误，避免将敏感信息写入客户端；故障排查应使用最小可复现请求。
+## 协议与限制
 
-## 开发与测试
+- 支持 Chat Completions；暂不支持 Responses、Anthropic Messages 或管理页面。
+- 缺少开头的 `system` 消息时会补充通用提示词；采样与推理参数仅在未传入时使用模型默认值。
+- 流式输出中断后，客户端应将未收到 `[DONE]` 视为失败。
+- 不自动刷新登录令牌或重试请求。日志不记录对话正文和凭证。
 
-要求 Bun 1.3.11 或以上。类型检查和测试不需要登录凭证，不调用收费或真实模型。
+## 开发
 
-```bash
+```sh
 bun install --frozen-lockfile
 bun run typecheck
 bun test
 docker build -t workbuddy-proxy:local .
 ```
 
-测试覆盖免费模型筛选、活动时间边界、收费模型拒绝、长 UTF-8 请求、工具字段透传、SSE 分片与非流式聚合。真实上游连通性需要在已登录环境单独验证。
+测试无需登录凭证，覆盖免费策略、长请求、工具字段和 SSE 聚合。提交约定见 [CONTRIBUTING.md](CONTRIBUTING.md)，安全说明见 [SECURITY.md](SECURITY.md)。
 
-```text
-src/
-  index.ts       配置、密钥文件和 Bun 服务启动
-  app.ts         请求校验、路由和协议适配
-  upstream.ts    WorkBuddy 认证文件与原生 fetch
-  models.ts      免费模型筛选纯逻辑
-  sse.ts         SSE 解码和非流式聚合
-tests/           离线测试
-```
+## 参考
 
-## 当前边界
-
-- 支持 Chat Completions，未实现 Responses、Anthropic Messages 或后台管理页面。
-- 多模态、上下文长度和工具调用能力取决于上游模型；请求体上限为 16 MiB，上游请求超时为 180 秒。
-- 流式输出开始后若上游中断，客户端应将未收到 `[DONE]` 视为失败。非流式聚合会检测不完整响应。
-- 没有自动重试、账号轮换、额度绕过或登录令牌刷新功能。
-
-## 参考与依赖
-
-- [WorkBuddy2API](https://github.com/Tom6814/WorkBuddy2API)：认证文件结构和内部接口路径的参考，未作为运行依赖或打入镜像。
-- [WorkBuddy AI](https://www.workbuddy.ai)：上游模型与账号服务。
-- [Bun](https://github.com/oven-sh/bun)：HTTP 服务、fetch、TypeScript 执行和测试运行时。
-- [Portless](https://github.com/vercel-labs/portless)：可选的独立本地 HTTPS 代理。
+- [WorkBuddy2API](https://github.com/Tom6814/WorkBuddy2API)：认证结构和接口路径参考，非运行依赖。
+- [WorkBuddy AI](https://www.workbuddy.ai)：上游模型服务。
+- [Bun](https://github.com/oven-sh/bun)：运行时与测试工具。
+- [Portless](https://github.com/vercel-labs/portless)：可选的本地 HTTPS 代理。
 
 ## 许可证
 
-本项目采用 [MIT License](LICENSE)。第三方软件分别遵循其各自许可证。
+[MIT](LICENSE)
