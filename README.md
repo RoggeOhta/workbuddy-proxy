@@ -33,7 +33,7 @@
 ## 功能
 
 - **动态模型目录**：每次查询和调用前读取上游配置，仅放行明确为零费率或处于有效免费活动中的模型。
-- **原生 HTTP**：`Bun.serve` + `fetch` 直接传递 JSON，避免旧实现把长提示词写入 curl 配置行导致的 502。
+- **原生 HTTP**：`Bun.serve` + `fetch` 直接传递 JSON 请求体，支持较大的上下文和工具定义。
 - **流式响应**：逐块转发上游 SSE，保留推理内容和工具调用字段。
 - **非流式响应**：聚合文本、推理、工具参数和 usage；检测流中断。
 - **Docker**：只读挂载登录目录，独立数据卷保存代理密钥；重建容器不更换密钥。
@@ -74,7 +74,7 @@ docker compose up -d --build
 
 macOS 默认路径可直接使用。Linux / 远程主机需在 `.env` 的 `WORKBUDDY_AUTH_DIR` 中指定已准备好的认证目录，该目录必须包含 `workbuddy-desktop-ai.info`。
 
-Compose 项目名固定为 `workbuddy-proxy`，用于兼容本项目早期 Python 部署的容器和 `proxy-data` 卷。不要在同一 Docker 主机上同时启动两套相同项目名的部署。
+Compose 项目名默认为 `workbuddy-proxy`。同一主机部署多个实例时，请分别设置项目名和宿主机端口，确保数据卷和端口独立。
 
 ### 3. 获取代理密钥
 
@@ -99,15 +99,7 @@ docker compose exec -T proxy cat /data/.api-key | pbcopy
 | API Key | 上一步读取的代理密钥，不加 `Bearer` 前缀 |
 | 模型目录 | 点击“获取可用模型”，以实时返回为准 |
 
-2026-09-14 验证时，免费目录包含：
-
-| 名称 | 模型 ID |
-| --- | --- |
-| Deepseek-V4.1-Flash | `deepseek-v4.1-flash` |
-| Hy4 preview | `hy4-preview-f` |
-| Hy3 | `hy3` |
-
-`hy4-preview` 是收费线路，和 `hy4-preview-f` 不同。此表只是验证快照；免费活动结束后应刷新模型目录。免费判断依赖上游配置，不保证未来价格或计费规则不变。
+模型目录由上游账号配置和免费活动决定，不维护固定模型清单。客户端应使用 `/v1/models` 返回的完整 ID；同名模型的不同线路可能具有不同费率。免费活动结束后应刷新模型目录。
 
 ## Portless 本地 HTTPS
 
@@ -227,28 +219,17 @@ src/
 tests/           离线测试
 ```
 
-## 实测记录（2026-09-14）
-
-Bun Docker 容器已验证：
-
-- 三个免费模型均返回 `OK`，对应调用响应的 `credit` 为 `0`。
-- DeepSeek 流式请求携带约 28 万字符上下文和工具定义，返回预期内容与 `[DONE]`。
-- DeepSeek 生成 `read_file` 工具调用，接收模拟工具结果后正确回复标记。
-- 非流式聚合、免费模型目录、收费线路拒绝均通过检查。
-
-这些是限定请求的验证结果，不等于完整客户端兼容性或上下文极限测试。
-
 ## 当前边界
 
 - 支持 Chat Completions，未实现 Responses、Anthropic Messages 或后台管理页面。
-- 文本调用已做真实验证；图片输入、长上下文极限及高并发未完整验证。
+- 多模态、上下文长度和工具调用能力取决于上游模型；请求体上限为 16 MiB，上游请求超时为 180 秒。
 - 流式输出开始后若上游中断，客户端应将未收到 `[DONE]` 视为失败。非流式聚合会检测不完整响应。
 - 没有自动重试、账号轮换、额度绕过或登录令牌刷新功能。
 
 ## 参考与依赖
 
 - [WorkBuddy2API](https://github.com/Tom6814/WorkBuddy2API)：认证文件结构和内部接口路径的参考，未作为运行依赖或打入镜像。
-- [WorkBuddy AI](https://www.workbuddy.ai)：上游服务；接口和模型配置结合本机客户端及实际请求验证。
+- [WorkBuddy AI](https://www.workbuddy.ai)：上游模型与账号服务。
 - [Bun](https://github.com/oven-sh/bun)：HTTP 服务、fetch、TypeScript 执行和测试运行时。
 - [Portless](https://github.com/vercel-labs/portless)：可选的独立本地 HTTPS 代理。
 
