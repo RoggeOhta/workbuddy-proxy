@@ -4,10 +4,12 @@
 
 <h1 align="center">WorkBuddy Proxy</h1>
 
+<p align="center"><strong>English</strong> · <a href="README.zh-CN.md">简体中文</a></p>
+
 <p align="center">
-  将 WorkBuddy AI 的免费模型，接到你习惯的客户端。
+  Use WorkBuddy AI’s free models in your favorite client.
   <br />
-  Bun + TypeScript · Docker · 本地 HTTPS · 流式输出
+  Bun + TypeScript · Docker · Local HTTPS · Streaming
 </p>
 
 <p align="center">
@@ -19,54 +21,54 @@
   <a href="package.json"><img src="https://img.shields.io/badge/Runtime_dependencies-0-59636E?style=flat-square" alt="Zero third-party runtime dependencies" /></a>
 </p>
 
-## 快速开始
+## Quick start
 
-### AI 安装
+### Let AI install it
 
 ```text
-帮我安装 https://github.com/RoggeOhta/workbuddy-proxy，验证模型调用后给我连接信息。
+Install https://github.com/RoggeOhta/workbuddy-proxy for me, test a model call, and give me the connection details.
 ```
 
-### 手动安装
+### Manual installation
 
-需要 Git、Docker Compose，以及已登录的 WorkBuddy AI。
+You need Git, Docker Compose, and a signed-in WorkBuddy AI account.
 
 ```sh
 git clone https://github.com/RoggeOhta/workbuddy-proxy.git
 cd workbuddy-proxy
 ```
 
-将 `.env.example` 复制为 `.env`，配置登录文件所在目录：
+Copy `.env.example` to `.env` and set the directory containing your login file:
 
 ```dotenv
 WORKBUDDY_AUTH_DIR=/path/to/auth-directory
 ```
 
-目录需包含 `workbuddy-desktop-ai.info`。macOS 默认目录无需配置：
+The directory must contain `workbuddy-desktop-ai.info`. On macOS, you can leave the setting unchanged if you use the default directory:
 
 ```text
 ~/Library/Application Support/CodeBuddyExtension/Data/Public/auth
 ```
 
-Windows 使用 `C:/path/to/auth-directory` 格式。然后启动并读取代理密钥：
+On Windows, use a path such as `C:/path/to/auth-directory`. Start the proxy and retrieve its API key:
 
 ```sh
 docker compose up -d --build
 docker compose exec -T proxy cat /data/.api-key
 ```
 
-## 客户端配置
+## Client setup
 
-| 字段 | 值 |
+| Field | Value |
 | --- | --- |
-| 协议 | OpenAI Chat Completions |
+| Protocol | OpenAI Chat Completions |
 | Base URL | `http://127.0.0.1:18081/v1` |
-| API Key | 上一步输出的代理密钥 |
-| 模型 | 点击“获取可用模型”选择 |
+| API key | The proxy key from the previous step |
+| Model | Fetch the available models and select one |
 
-仅提供当前免费模型；支持流式输出、推理内容和工具调用。登录过期后需更新认证文件。
+Only models currently listed as free are available. Streaming, reasoning content, and tool calls are supported. Update the login file when your session expires.
 
-## 可选：本地域名
+## Optional: local domain
 
 ```sh
 npm install -g portless
@@ -74,20 +76,20 @@ portless alias workbuddy 18081
 portless proxy start
 ```
 
-Base URL 改为 `https://workbuddy.localhost/v1`，密钥不变。
+Use `https://workbuddy.localhost/v1` as the Base URL. The API key stays the same.
 
-## 常用命令
+## Common commands
 
 ```sh
-docker compose ps                 # 状态
-docker compose logs --tail=50     # 日志
+docker compose ps                # Status
+docker compose logs --tail=50     # Logs
 git pull
-docker compose up -d --build      # 更新
-docker compose down              # 停止，保留密钥
+docker compose up -d --build      # Update
+docker compose down              # Stop, keeping the API key
 ```
 
-## 更多
+## More
 
-[配置与 API](docs/guide.md) · [开发](CONTRIBUTING.md) · [安全](SECURITY.md) · [MIT License](LICENSE)
+[Configuration & API (中文)](docs/guide.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [MIT License](LICENSE)
 
-非官方项目，适配 WorkBuddy AI 海外版。接口参考 [WorkBuddy2API](https://github.com/Tom6814/WorkBuddy2API)，运行时使用 [Bun](https://bun.sh)。
+An unofficial project for the international version of WorkBuddy AI. API integration references [WorkBuddy2API](https://github.com/Tom6814/WorkBuddy2API). Powered by [Bun](https://bun.sh).
